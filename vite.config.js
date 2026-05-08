@@ -6,8 +6,8 @@ export default defineConfig({
     outDir: '../dist',
     rollupOptions: {
       input: {
-        main: 'public/index.html',
-        submit: 'public/submit.html'
+        main: './public/index.html',
+        submit: './public/submit.html'
       }
     }
   },
