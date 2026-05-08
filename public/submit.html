@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit a Fact — CortexLedger</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+      --accent: #00ff88; --accent2: #0066ff; --text: #e8e8f0;
+      --muted: #6b6b8a; --tech: #00ccff; --science: #aa00ff;
+      --health: #ff6600; --error: #ff4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 2.5rem; background: rgba(10,10,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+    .logo-text { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .logo-text span { color: var(--accent); }
+    nav .links { display: flex; align-items: center; gap: 2rem; }
+    nav .links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s; }
+    nav .links a:hover, nav .links a.active { color: var(--accent); }
+    .btn-connect { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 0.5rem 1.2rem; font-family: 'Space Mono', monospace; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+    .btn-connect:hover { background: var(--accent); color: var(--bg); }
+    .main { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 8rem 2.5rem 6rem; }
+    .page-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2); color: var(--accent); padding: 0.3rem 0.8rem; font-size: 0.7rem; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+    .page-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.8rem; line-height: 1; }
+    .page-title span { color: transparent; -webkit-text-stroke: 1px var(--accent); }
+    .page-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.7; margin-bottom: 3rem; max-width: 500px; }
+    .rules-box { background: var(--surface); border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 2.5rem; }
+    .rules-title { font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+    .rules-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .rule-item { display: flex; align-items: flex-start; gap: 0.8rem; font-size: 0.82rem; color: var(--muted); }
+    .rule-icon { color: var(--accent); font-family: 'Space Mono', monospace; font-size: 0.7rem; margin-top: 0.1rem; flex-shrink: 0; }
+    .form-card { background: var(--surface); border: 1px solid var(--border); padding: 2.5rem; }
+    .form-group { margin-bottom: 1.8rem; }
+    .form-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .form-label span { font-size: 0.8rem; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-label .hint { font-size: 0.7rem; color: var(--muted); font-family: 'Space Mono', monospace; font-weight: 400; text-transform: none; }
+    .category-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--border); }
+    .cat-option { background: var(--bg); padding: 1rem; cursor: pointer; text-align: center; transition: all 0.2s; border: 2px solid transparent; }
+    .cat-option:hover { background: #15151f; }
+    .cat-option.selected.Technology { background: rgba(0,204,255,0.08); border-color: var(--tech); }
+    .cat-option.selected.Science { background: rgba(170,0,255,0.08); border-color: var(--science); }
+    .cat-option.selected.Health { background: rgba(255,102,0,0.08); border-color: var(--health); }
+    .cat-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
+    .cat-name { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+    .cat-option.selected.Technology .cat-name { color: var(--tech); }
+    .cat-option.selected.Science .cat-name { color: var(--science); }
+    .cat-option.selected.Health .cat-name { color: var(--health); }
+    .form-input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.9rem 1rem; font-family: 'Syne', sans-serif; font-size: 0.9rem; transition: border-color 0.2s; outline: none; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--muted); }
+    textarea.form-input { resize: vertical; min-height: 140px; line-height: 1.6; }
+    .char-count { text-align: right; font-size: 0.7rem; font-family: 'Space Mono', monospace; color: var(--muted); margin-top: 0.4rem; }
+    .submit-area { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .btn-submit { background: var(--accent); color: var(--bg); border: none; padding: 1rem 2.5rem; font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-submit:hover:not(:disabled) { background: #00cc6a; transform: translateY(-2px); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .submit-note { font-size: 0.75rem; color: var(--muted); line-height: 1.5; max-width: 250px; }
+    .status-box { margin-top: 2rem; padding: 1.2rem 1.5rem; display: none; align-items: flex-start; gap: 1rem; }
+    .status-box.show { display: flex; }
+    .status-box.pending { border: 1px solid rgba(0,255,136,0.3); background: rgba(0,255,136,0.05); }
+    .status-box.success { border: 1px solid var(--accent); background: rgba(0,255,136,0.08); }
+    .status-box.error { border: 1px solid var(--error); background: rgba(255,68,68,0.08); }
+    .status-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .status-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .status-box.success .status-title { color: var(--accent); }
+    .status-box.error .status-title { color: var(--error); }
+    .status-box.pending .status-title { color: var(--accent); }
+    .status-text { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+    .tx-link { display: inline-block; margin-top: 0.5rem; font-size: 0.72rem; font-family: 'Space Mono', monospace; color: var(--accent2); text-decoration: none; word-break: break-all; }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,255,136,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
+    footer p { font-size: 0.75rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+    footer p span { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">
+      <div class="logo-icon"></div>
+      <span class="logo-text">Cortex<span>Ledger</span></span>
+    </a>
+    <div class="links">
+      <a href="index.html">Ledger</a>
+      <a href="submit.html" class="active">Submit</a>
+    </div>
+    <button class="btn-connect" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+  </nav>
+
+  <main class="main">
+    <div class="page-tag">AI-POWERED VERIFICATION</div>
+    <h1 class="page-title">Submit a <span>Verified</span> Fact</h1>
+    <p class="page-desc">Your submission will be reviewed by GenLayer's AI validators. Only facts that pass all verification rules will be stored permanently on-chain.</p>
+
+    <div class="rules-box">
+      <div class="rules-title">// Verification Rules</div>
+      <div class="rules-list">
+        <div class="rule-item"><span class="rule-icon">[01]</span><span>Content must be in <strong>English only</strong></span></div>
+        <div class="rule-item"><span class="rule-icon">[02]</span><span><strong>No political content</strong> — politicians, elections, government policies are rejected</span></div>
+        <div class="rule-item"><span class="rule-icon">[03]</span><span>Category must be <strong>Technology, Science, or Health</strong></span></div>
+        <div class="rule-item"><span class="rule-icon">[04]</span><span>Fact must be <strong>real, verifiable, and at least 2 sentences</strong> long</span></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-group">
+        <div class="form-label"><span>Category</span><span class="hint">Required</span></div>
+        <div class="category-selector">
+          <div class="cat-option" id="cat-Technology" onclick="selectCategory('Technology')">
+            <div class="cat-icon">⚡</div><div class="cat-name">Technology</div>
+          </div>
+          <div class="cat-option" id="cat-Science" onclick="selectCategory('Science')">
+            <div class="cat-icon">🔬</div><div class="cat-name">Science</div>
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label"><span>Title</span><span class="hint">Max 100 characters</span></div>
+        <input type="text" class="form-input" id="titleInput" placeholder="e.g. CRISPR Gene Editing Breakthrough in 2024" maxlength="100" oninput="updateCharCount('titleInput','titleCount',100)" />
+        <div class="char-count"><span id="titleCount">0</span>/100</div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label"><span>Content</span><span class="hint">Min 2 sentences</span></div>
+        <textarea class="form-input" id="contentInput" placeholder="Describe the fact in detail. Include specific information, sources, dates, or data..." maxlength="1000" oninput="updateCharCount('contentInput','contentCount',1000)"></textarea>
+        <div class="char-count"><span id="contentCount">0</span>/1000</div>
+      </div>
+
+      <div class="submit-area">
+        <button class="btn-submit" id="submitBtn" onclick="submitFact()">Submit for Verification →</button>
+        <p class="submit-note">After submission, GenLayer AI validators will review your fact. This may take ~30 minutes.</p>
+      </div>
+
+      <div class="status-box" id="statusBox">
+        <span class="status-icon" id="statusIcon">⟳</span>
+        <div class="status-content">
+          <div class="status-title" id="statusTitle">Processing...</div>
+          <div class="status-text" id="statusText">Sending to GenLayer Bradbury testnet...</div>
+          <a class="tx-link" id="txLink" href="#" target="_blank" style="display:none"></a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>CortexLedger — Powered by <span>GenLayer</span> Bradbury Testnet</p>
+    <p>Contract: <span>0x2Ca0F3cdC95BfeAcD4Fdd4b457C0A1aDb12A0507</span></p>
+  </footer>
+
+  <script>
+    const CONTRACT_ADDRESS = "0x2Ca0F3cdC95BfeAcD4Fdd4b457C0A1aDb12A0507";
+    let selectedCategory = '';
+    let walletAddress = '';
+
+    window.addEventListener('load', async function() {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            walletAddress = accounts[0];
+            updateWalletBtn(walletAddress);
+          }
+        } catch(e) {}
+      }
+    });
+
+    function updateWalletBtn(addr) {
+      const short = addr.slice(0,6) + '...' + addr.slice(-4);
+      const btn = document.getElementById('connectBtn');
+      btn.textContent = short;
+      btn.classList.add('connected');
+    }
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert('Please install MetaMask to use this app!');
+        return;
+      }
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        walletAddress = accounts[0];
+        updateWalletBtn(walletAddress);
+      } catch(e) {
+        alert('Wallet connection was rejected.');
+      }
+    }
+
+    function selectCategory(cat) {
+      selectedCategory = cat;
+      document.querySelectorAll('.cat-option').forEach(el => {
+        el.classList.remove('selected', 'Technology', 'Science', 'Health');
+      });
+      document.getElementById('cat-' + cat).classList.add('selected', cat);
+    }
+
+    function updateCharCount(inputId, countId, max) {
+      document.getElementById(countId).textContent = document.getElementById(inputId).value.length;
+    }
+
+    function showStatus(type, title, text) {
+      const box = document.getElementById('statusBox');
+      box.className = 'status-box show ' + type;
+      document.getElementById('statusTitle').textContent = title;
+      document.getElementById('statusText').textContent = text;
+      const icons = { pending: '⟳', success: '✓', error: '✗' };
+      document.getElementById('statusIcon').textContent = icons[type];
+    }
+
+    async function submitFact() {
+      if (!walletAddress) {
+        showStatus('error', 'Wallet Not Connected', 'Please connect your MetaMask wallet first.');
+        document.getElementById('statusBox').classList.add('show');
+        return;
+      }
+      if (!selectedCategory) {
+        showStatus('error', 'Category Required', 'Please select Technology, Science, or Health.');
+        document.getElementById('statusBox').classList.add('show');
+        return;
+      }
+      const title = document.getElementById('titleInput').value.trim();
+      const content = document.getElementById('contentInput').value.trim();
+      if (!title) {
+        showStatus('error', 'Title Required', 'Please enter a title.');
+        document.getElementById('statusBox').classList.add('show');
+        return;
+      }
+      if (content.length < 50) {
+        showStatus('error', 'Content Too Short', 'Please write at least 2 full sentences.');
+        document.getElementById('statusBox').classList.add('show');
+        return;
+      }
+
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Submitting...';
+      showStatus('pending', 'Waiting for MetaMask...', 'Please sign the transaction in MetaMask.');
+      document.getElementById('statusBox').classList.add('show');
+
+      try {
+      const provider = new ethers.BrowserProvider(window.ethereum);  
+        // Make sure we're on GenLayer Bradbury (Chain ID 4221)
+const network = await provider.getNetwork();
+if (network.chainId !== 4221n) {
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x107D' }],
+    });
+  } catch(switchError) {
+    showStatus('error', 'Wrong Network', 'Please switch to GenLayer Bradbury network in MetaMask.');
+    document.getElementById('statusBox').classList.add('show');
+    btn.disabled = false;
+    btn.innerHTML = 'Submit for Verification →';
+    return;
+  }
+}
+        const signer = await provider.getSigner();
+
+        const iface = new ethers.Interface([
+          'function submit_fact(string category, string title, string content)'
+        ]);
+        const data = iface.encodeFunctionData('submit_fact', [selectedCategory, title, content]);
+
+        const tx = await signer.sendTransaction({
+          to: CONTRACT_ADDRESS,
+          data: data,
+          gasLimit: 1000000
+        });
+
+        showStatus('success', 'Transaction Submitted! ✓',
+          'Your fact has been sent to GenLayer Bradbury. AI validators will review it. Finalization takes ~30 minutes.');
+
+        const txLink = document.getElementById('txLink');
+        txLink.href = 'https://explorer-bradbury.genlayer.com/tx/' + tx.hash;
+        txLink.textContent = 'View on Explorer: ' + tx.hash.slice(0,20) + '...';
+        txLink.style.display = 'block';
+
+        document.getElementById('titleInput').value = '';
+        document.getElementById('contentInput').value = '';
+        document.getElementById('titleCount').textContent = '0';
+        document.getElementById('contentCount').textContent = '0';
+        selectedCategory = '';
+        document.querySelectorAll('.cat-option').forEach(el => {
+          el.classList.remove('selected', 'Technology', 'Science', 'Health');
+        });
+
+      } catch(e) {
+        console.error(e);
+        showStatus('error', 'Transaction Failed', e.message || 'Something went wrong. Please try again.');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = 'Submit for Verification →';
+    }
+  </script>
+</body>
+</html>

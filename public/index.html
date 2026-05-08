@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CortexLedger — Decentralized Fact Verification</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+      --accent: #00ff88; --accent2: #0066ff; --text: #e8e8f0;
+      --muted: #6b6b8a; --tech: #00ccff; --science: #aa00ff;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 2.5rem; background: rgba(10,10,15,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+    .logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; background: var(--accent); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+    .logo-text { font-size: 1.2rem; font-weight: 800; color: var(--text); letter-spacing: -0.02em; }
+    .logo-text span { color: var(--accent); }
+    nav .links { display: flex; align-items: center; gap: 2rem; }
+    nav .links a { color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.2s; }
+    nav .links a:hover, nav .links a.active { color: var(--accent); }
+    .btn-connect { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 0.5rem 1.2rem; font-family: 'Space Mono', monospace; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+    .btn-connect:hover { background: var(--accent); color: var(--bg); }
+    .hero { position: relative; z-index: 1; padding: 10rem 2.5rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .hero-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2); color: var(--accent); padding: 0.3rem 0.8rem; font-size: 0.7rem; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 1.5rem; }
+    .hero-tag::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 800; line-height: 1; letter-spacing: -0.03em; margin-bottom: 1.5rem; }
+    .hero h1 .line1 { color: var(--text); }
+    .hero h1 .line2 { color: transparent; -webkit-text-stroke: 1px var(--accent); }
+    .hero p { font-size: 1rem; color: var(--muted); max-width: 500px; line-height: 1.7; margin-bottom: 2.5rem; }
+    .hero-stats { display: flex; gap: 3rem; margin-bottom: 3rem; }
+    .stat { display: flex; flex-direction: column; gap: 0.2rem; }
+    .stat-number { font-size: 1.8rem; font-weight: 800; color: var(--accent); font-family: 'Space Mono', monospace; }
+    .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .filters-section { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 2.5rem 2rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .filter-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; font-family: 'Space Mono', monospace; }
+    .filter-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 0.4rem 1rem; font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(0,255,136,0.08); }
+    .filter-btn.tech.active { border-color: var(--tech); color: var(--tech); background: rgba(0,204,255,0.08); }
+    .filter-btn.science.active { border-color: var(--science); color: var(--science); background: rgba(170,0,255,0.08); }
+    .ledger-section { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 2.5rem 6rem; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .section-title { font-size: 0.75rem; font-family: 'Space Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .fact-count { font-size: 0.75rem; font-family: 'Space Mono', monospace; color: var(--accent); }
+    .ledger-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1px; background: var(--border); }
+    .fact-card { background: var(--surface); padding: 1.5rem; transition: background 0.2s; animation: fadeIn 0.5s ease forwards; opacity: 0; }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .fact-card:hover { background: #15151f; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .category-badge { font-size: 0.65rem; font-family: 'Space Mono', monospace; font-weight: 700; padding: 0.2rem 0.6rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    .category-badge.Technology { background: rgba(0,204,255,0.1); color: var(--tech); border: 1px solid rgba(0,204,255,0.3); }
+    .category-badge.Science { background: rgba(170,0,255,0.1); color: var(--science); border: 1px solid rgba(170,0,255,0.3); }
+    .verified-badge { display: flex; align-items: center; gap: 0.3rem; font-size: 0.65rem; font-family: 'Space Mono', monospace; color: var(--accent); }
+    .verified-badge::before { content: '✓'; font-size: 0.7rem; }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 0.6rem; line-height: 1.3; }
+    .card-content { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.2rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .card-author { font-size: 0.65rem; font-family: 'Space Mono', monospace; color: var(--muted); }
+    .card-author span { color: var(--accent2); }
+    .empty-state { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5rem 2rem; text-align: center; gap: 1rem; }
+    .empty-icon { font-size: 3rem; opacity: 0.3; }
+    .empty-title { font-size: 1rem; font-weight: 700; color: var(--muted); }
+    .empty-text { font-size: 0.8rem; color: var(--muted); opacity: 0.6; }
+    .loading-state { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; padding: 5rem; gap: 1rem; color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.8rem; }
+    .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .cta-banner { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto 4rem; padding: 0 2.5rem; }
+    .cta-inner { background: linear-gradient(135deg, rgba(0,255,136,0.08), rgba(0,102,255,0.08)); border: 1px solid rgba(0,255,136,0.2); padding: 2.5rem; display: flex; align-items: center; justify-content: space-between; gap: 2rem; }
+    .cta-text h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .cta-text p { font-size: 0.85rem; color: var(--muted); }
+    .btn-primary { background: var(--accent); color: var(--bg); border: none; padding: 0.8rem 2rem; font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; transition: all 0.2s; white-space: nowrap; }
+    .btn-primary:hover { background: #00cc6a; transform: translateY(-2px); }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
+    footer p { font-size: 0.75rem; color: var(--muted); font-family: 'Space Mono', monospace; }
+    footer p span { color: var(--accent); }
+    @media (max-width: 768px) { nav { padding: 1rem 1.5rem; } .hero { padding: 8rem 1.5rem 3rem; } .hero-stats { gap: 1.5rem; } .filters-section { padding: 0 1.5rem 1.5rem; } .ledger-section { padding: 0 1.5rem 4rem; } .cta-banner { padding: 0 1.5rem; } .cta-inner { flex-direction: column; } footer { flex-direction: column; gap: 1rem; text-align: center; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html" class="logo">
+      <div class="logo-icon"></div>
+      <span class="logo-text">Cortex<span>Ledger</span></span>
+    </a>
+    <div class="links">
+      <a href="index.html" class="active">Ledger</a>
+      <a href="submit.html">Submit</a>
+    </div>
+    <button class="btn-connect" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-tag">LIVE ON GENLAYER BRADBURY TESTNET</div>
+    <h1>
+      <div class="line1">Verified Facts.</div>
+      <div class="line2">On-Chain Truth.</div>
+    </h1>
+    <p>A decentralized fact-checking platform powered by GenLayer AI. Every fact is verified by multiple AI validators before being permanently stored on-chain.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-number" id="totalFacts">0</span><span class="stat-label">Verified Facts</span></div>
+      <div class="stat"><span class="stat-number">2</span><span class="stat-label">Categories</span></div>
+      <div class="stat"><span class="stat-number">AI</span><span class="stat-label">Powered</span></div>
+    </div>
+  </section>
+
+  <div class="filters-section">
+    <span class="filter-label">Filter:</span>
+    <button class="filter-btn active" onclick="filterFacts('All', this)">All</button>
+    <button class="filter-btn tech" onclick="filterFacts('Technology', this)">Technology</button>
+    <button class="filter-btn science" onclick="filterFacts('Science', this)">Science</button>
+  </div>
+
+  <section class="ledger-section">
+    <div class="section-header">
+      <span class="section-title">// Verified Ledger</span>
+      <span class="fact-count" id="factCount">Loading...</span>
+    </div>
+    <div class="ledger-grid" id="ledgerGrid">
+      <div class="loading-state"><div class="spinner"></div>Fetching verified facts...</div>
+    </div>
+  </section>
+
+  <div class="cta-banner">
+    <div class="cta-inner">
+      <div class="cta-text">
+        <h3>Have a verified fact to share?</h3>
+        <p>Submit your fact and let GenLayer's AI validators decide if it meets our standards.</p>
+      </div>
+      <a href="submit.html" class="btn-primary">Submit a Fact →</a>
+    </div>
+  </div>
+
+  <footer>
+    <p>CortexLedger — Powered by <span>GenLayer</span> Bradbury Testnet</p>
+    <p>Contract: <span>0x2Ca0F3cdC95BfeAcD4Fdd4b457C0A1aDb12A0507</span></p>
+  </footer>
+
+  <script>
+    var CONTRACT_ADDRESS = "0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06";
+    var BRADBURY_RPC = "https://studio.genlayer.com/api";
+    var CALLER = "0x4315ef96BB9774BB2b541817672DA4969c7219E3";
+    var CALLDATA = "0x16046172677305066d6574686f649c016765745f76657269666965645f6c6564676572";
+    var allFacts = [];
+    var currentFilter = 'All';
+
+    async function connectWallet() {
+      if (!window.ethereum) { alert('Please install MetaMask!'); return; }
+      try {
+        var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        document.getElementById('connectBtn').textContent = accounts[0].slice(0,6) + '...' + accounts[0].slice(-4);
+      } catch(e) { alert('Connection rejected.'); }
+    }
+
+    function decodeCalldataResult(hexResult) {
+      try {
+        var bytes = new Uint8Array(hexResult.match(/.{1,2}/g).map(function(b) { return parseInt(b, 16); }));
+        var text = new TextDecoder().decode(bytes);
+        console.log('Raw text:', text);
+        var results = [];
+        var regex = /(0x[a-fA-F0-9]{40}\|[^\|]+\|[^\|]+\|[^\x00-\x08\x0e-\x1f]+)/g;
+        var match;
+        while ((match = regex.exec(text)) !== null) {
+          results.push(match[1].trim());
+        }
+        console.log('Results:', results);
+        return results;
+      } catch(e) {
+        console.error('Decode error:', e);
+        return [];
+      }
+    }
+
+    async function fetchFacts() {
+      try {
+        var response = await fetch(BRADBURY_RPC, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            method: 'gen_call',
+            params: [{
+              to: CONTRACT_ADDRESS,
+              from: CALLER,
+              data: CALLDATA,
+              type: 'read'
+            }],
+            id: 1
+          })
+        });
+        var data = await response.json();
+        console.log('RPC Response:', data);
+        if (data.result && data.result !== '05') {
+          var decoded = decodeCalldataResult(data.result);
+          console.log('Decoded facts:', decoded);
+          return decoded;
+        }
+        return [];
+      } catch(e) {
+        console.error('Error fetching facts:', e);
+        return [];
+      }
+    }
+
+    function parseFact(entry) {
+      var parts = entry.split('|');
+      return {
+        author: parts[0] || '',
+        category: parts[1] || 'Unknown',
+        title: parts[2] || 'Untitled',
+        content: parts[3] || ''
+      };
+    }
+
+    function escapeHtml(text) {
+      var div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderFacts(facts) {
+      var grid = document.getElementById('ledgerGrid');
+      var filtered = currentFilter === 'All' ? facts : facts.filter(function(f) { return f.category === currentFilter; });
+      document.getElementById('factCount').textContent = filtered.length + ' fact' + (filtered.length !== 1 ? 's' : '') + ' verified';
+      document.getElementById('totalFacts').textContent = facts.length;
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">◎</div><div class="empty-title">No facts found</div><div class="empty-text">Be the first to submit a verified fact in this category.</div></div>';
+        return;
+      }
+      grid.innerHTML = filtered.map(function(fact, i) {
+        return '<div class="fact-card" style="animation-delay:' + (i * 0.05) + 's"><div class="card-header"><span class="category-badge ' + escapeHtml(fact.category) + '">' + escapeHtml(fact.category) + '</span><span class="verified-badge">AI Verified</span></div><div class="card-title">' + escapeHtml(fact.title) + '</div><div class="card-content">' + escapeHtml(fact.content) + '</div><div class="card-footer"><span class="card-author">By <span>' + fact.author.slice(0,6) + '...' + fact.author.slice(-4) + '</span></span></div></div>';
+      }).join('');
+    }
+
+    function filterFacts(category, btn) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+      if (btn) btn.classList.add('active');
+      renderFacts(allFacts);
+    }
+
+    async function init() {
+      if (window.ethereum) {
+        try {
+          var accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            document.getElementById('connectBtn').textContent = accounts[0].slice(0,6) + '...' + accounts[0].slice(-4);
+          }
+        } catch(e) {}
+      }
+      var raw = await fetchFacts();
+      console.log('Raw facts:', raw);
+      allFacts = raw.map(parseFact);
+      renderFacts(allFacts);
+    }
+
+    init();
+  </script>
+</body>
+</html>
