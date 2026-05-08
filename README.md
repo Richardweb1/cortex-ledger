@@ -5,7 +5,7 @@ CortexLedger 🧠⛓️
 ![Status](https://img.shields.io/badge/Status-Live-success?style=for-the-badge)
 ---
 🌐 Live Demo
-Website: localhost:5173  
+Website: **Website:** [cortex-ledger.vercel.app](https://cortex-ledger.vercel.app)  
 Contract: `0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06`  
 Network: GenLayer Studio Testnet
 ---
