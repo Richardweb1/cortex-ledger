@@ -137,19 +137,10 @@ Facts must pass ALL of the following rules to be approved:
 ✅ Correct Category — Must be Technology or Science
 ✅ Quality Check — Must be real, verifiable, and at least 2 sentences long
 ---
- Contributing
-Fork the repository
-Create your feature branch (`git checkout -b feature/AmazingFeature`)
-Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-Push to the branch (`git push origin feature/AmazingFeature`)
-Open a Pull Request
----
-📄 License
-This project is licensed under the MIT License.
----
+
  Acknowledgments
-GenLayer — for building the first AI-powered blockchain
-GenLayer Docs — for comprehensive documentation
-GenLayer Studio — for the development environment
+GenLayer : for building the first AI-powered blockchain
+GenLayer Docs : for comprehensive documentation
+GenLayer Studio : for the development environment
 ---
 thank you all the team GenLayer
