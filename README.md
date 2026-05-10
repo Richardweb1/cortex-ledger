@@ -1,9 +1,6 @@
 CortexLedger 
-> A decentralized fact-checking platform powered by GenLayer AI. Every fact is verified by multiple AI validators before being permanently stored on chain.
-![CortexLedger](https://img.shields.io/badge/GenLayer-Bradbury%20Testnet-00ff88?style=for-the-badge)
-![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Live-success?style=for-the-badge)
----
+ A decentralized fact-checking platform powered by GenLayer AI. Every fact is verified by multiple AI validators before being permanently stored on chain.
+
 
 Website: Website: [cortex-ledger.vercel.app](https://cortex-ledger.vercel.app)  
 Contract: `0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06`  
@@ -58,16 +55,16 @@ MetaMask browser extension
 GenLayer Studio account
 Installation
 ```bash
-# Clone the repository
+ Clone the repository
 git clone https://github.com/yourusername/cortex-ledger.git
 
-# Navigate to project folder
+ Navigate to project folder
 cd cortex.ledger
 
-# Install dependencies
+ Install dependencies
 npm install
 
-# Start development server
+ Start development server
 npm run dev
 ```
 Open `http://localhost:5173` in your browser.
@@ -103,7 +100,7 @@ This process is completely decentralized  no single entity controls the outcome.
 Smart Contract
 The contract is written in Python using GenLayer Intelligent Contract framework:
 ```python
-# v0.2.16
+ v0.2.16
 from genlayer import *
 import json
 
