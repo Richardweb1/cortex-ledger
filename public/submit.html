@@ -26,6 +26,7 @@
     nav .links a:hover, nav .links a.active { color: var(--accent); }
     .btn-connect { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 0.5rem 1.2rem; font-family: 'Space Mono', monospace; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
     .btn-connect:hover { background: var(--accent); color: var(--bg); }
+    .btn-connect.connected { border-color: var(--accent2); color: var(--accent2); }
     .main { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 8rem 2.5rem 6rem; }
     .page-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.2); color: var(--accent); padding: 0.3rem 0.8rem; font-size: 0.7rem; font-family: 'Space Mono', monospace; letter-spacing: 0.1em; margin-bottom: 1.5rem; }
     .page-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.8rem; line-height: 1; }
@@ -46,12 +47,10 @@
     .cat-option:hover { background: #15151f; }
     .cat-option.selected.Technology { background: rgba(0,204,255,0.08); border-color: var(--tech); }
     .cat-option.selected.Science { background: rgba(170,0,255,0.08); border-color: var(--science); }
-    .cat-option.selected.Health { background: rgba(255,102,0,0.08); border-color: var(--health); }
     .cat-icon { font-size: 1.5rem; margin-bottom: 0.4rem; }
     .cat-name { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
     .cat-option.selected.Technology .cat-name { color: var(--tech); }
     .cat-option.selected.Science .cat-name { color: var(--science); }
-    .cat-option.selected.Health .cat-name { color: var(--health); }
     .form-input { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 0.9rem 1rem; font-family: 'Syne', sans-serif; font-size: 0.9rem; transition: border-color 0.2s; outline: none; }
     .form-input:focus { border-color: var(--accent); }
     .form-input::placeholder { color: var(--muted); }
@@ -76,7 +75,10 @@
     .tx-link { display: inline-block; margin-top: 0.5rem; font-size: 0.72rem; font-family: 'Space Mono', monospace; color: var(--accent2); text-decoration: none; word-break: break-all; }
     .spinner { width: 16px; height: 16px; border: 2px solid rgba(0,255,136,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
     @keyframes spin { to { transform: rotate(360deg); } }
-    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .network-badge { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(0,255,136,0.06); border: 1px solid rgba(0,255,136,0.15); padding: 0.3rem 0.7rem; font-size: 0.65rem; font-family: 'Space Mono', monospace; color: var(--muted); margin-bottom: 2rem; }
+    .network-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    footer { position: relative; z-index: 1; border-top: 1px solid var(--border); padding: 2rem 2.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
     footer p { font-size: 0.75rem; color: var(--muted); font-family: 'Space Mono', monospace; }
     footer p span { color: var(--accent); }
   </style>
@@ -100,12 +102,17 @@
     <h1 class="page-title">Submit a <span>Verified</span> Fact</h1>
     <p class="page-desc">Your submission will be reviewed by GenLayer's AI validators. Only facts that pass all verification rules will be stored permanently on-chain.</p>
 
+    <div class="network-badge">
+      <div class="network-dot"></div>
+      GenLayer Studio Testnet — Chain ID 61999
+    </div>
+
     <div class="rules-box">
       <div class="rules-title">// Verification Rules</div>
       <div class="rules-list">
         <div class="rule-item"><span class="rule-icon">[01]</span><span>Content must be in <strong>English only</strong></span></div>
         <div class="rule-item"><span class="rule-icon">[02]</span><span><strong>No political content</strong> — politicians, elections, government policies are rejected</span></div>
-        <div class="rule-item"><span class="rule-icon">[03]</span><span>Category must be <strong>Technology, Science, or Health</strong></span></div>
+        <div class="rule-item"><span class="rule-icon">[03]</span><span>Category must be <strong>Technology or Science</strong></span></div>
         <div class="rule-item"><span class="rule-icon">[04]</span><span>Fact must be <strong>real, verifiable, and at least 2 sentences</strong> long</span></div>
       </div>
     </div>
@@ -120,7 +127,6 @@
           <div class="cat-option" id="cat-Science" onclick="selectCategory('Science')">
             <div class="cat-icon">🔬</div><div class="cat-name">Science</div>
           </div>
-          
         </div>
       </div>
 
@@ -138,14 +144,14 @@
 
       <div class="submit-area">
         <button class="btn-submit" id="submitBtn" onclick="submitFact()">Submit for Verification →</button>
-        <p class="submit-note">After submission, GenLayer AI validators will review your fact. This may take ~30 minutes.</p>
+        <p class="submit-note">After submission, GenLayer AI validators will review your fact. Finalization takes ~30 minutes.</p>
       </div>
 
       <div class="status-box" id="statusBox">
         <span class="status-icon" id="statusIcon">⟳</span>
         <div class="status-content">
           <div class="status-title" id="statusTitle">Processing...</div>
-          <div class="status-text" id="statusText">Sending to GenLayer Bradbury testnet...</div>
+          <div class="status-text" id="statusText">Sending to GenLayer Studio testnet...</div>
           <a class="tx-link" id="txLink" href="#" target="_blank" style="display:none"></a>
         </div>
       </div>
@@ -153,16 +159,27 @@
   </main>
 
   <footer>
-    <p>CortexLedger — Powered by <span>GenLayer</span> Bradbury Testnet</p>
-    <p>Contract: <span>0x2Ca0F3cdC95BfeAcD4Fdd4b457C0A1aDb12A0507</span></p>
+    <p>CortexLedger — Powered by <span>GenLayer</span> Studio Testnet</p>
+    <p>Contract: <span>0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06</span></p>
   </footer>
 
   <script>
-    const CONTRACT_ADDRESS = "0x2Ca0F3cdC95BfeAcD4Fdd4b457C0A1aDb12A0507";
-    let selectedCategory = '';
-    let walletAddress = '';
+    // ── CONFIG ────────────────────────────────────────────────────────────────
+    const CONTRACT_ADDRESS = "0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06";
 
-    window.addEventListener('load', async function() {
+    // GenLayer Studio Testnet
+    const GENLAYER_CHAIN_ID     = 61999n;
+    const GENLAYER_CHAIN_HEX    = "0xF22F";           // 61999 in hex
+    const GENLAYER_RPC          = "https://studio.genlayer.com/api";
+    const GENLAYER_EXPLORER     = "https://studio.genlayer.com";
+    const GENLAYER_NETWORK_NAME = "GenLayer Studio";
+    const GENLAYER_SYMBOL       = "GEN";
+
+    let selectedCategory = '';
+    let walletAddress    = '';
+
+    // ── AUTO-CONNECT on page load ─────────────────────────────────────────────
+    window.addEventListener('load', async function () {
       if (window.ethereum) {
         try {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' });
@@ -170,17 +187,31 @@
             walletAddress = accounts[0];
             updateWalletBtn(walletAddress);
           }
-        } catch(e) {}
+        } catch (e) {}
+
+        // Listen for account / chain changes
+        window.ethereum.on('accountsChanged', (accounts) => {
+          walletAddress = accounts[0] || '';
+          walletAddress ? updateWalletBtn(walletAddress) : resetWalletBtn();
+        });
+        window.ethereum.on('chainChanged', () => window.location.reload());
       }
     });
 
     function updateWalletBtn(addr) {
-      const short = addr.slice(0,6) + '...' + addr.slice(-4);
+      const short = addr.slice(0, 6) + '...' + addr.slice(-4);
       const btn = document.getElementById('connectBtn');
       btn.textContent = short;
       btn.classList.add('connected');
     }
 
+    function resetWalletBtn() {
+      const btn = document.getElementById('connectBtn');
+      btn.textContent = 'Connect Wallet';
+      btn.classList.remove('connected');
+    }
+
+    // ── CONNECT WALLET ────────────────────────────────────────────────────────
     async function connectWallet() {
       if (!window.ethereum) {
         alert('Please install MetaMask to use this app!');
@@ -190,116 +221,193 @@
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         walletAddress = accounts[0];
         updateWalletBtn(walletAddress);
-      } catch(e) {
+        await ensureGenLayerNetwork();
+      } catch (e) {
         alert('Wallet connection was rejected.');
       }
     }
 
+    // ── ENSURE CORRECT NETWORK ────────────────────────────────────────────────
+    async function ensureGenLayerNetwork() {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network  = await provider.getNetwork();
+
+      if (network.chainId !== GENLAYER_CHAIN_ID) {
+        try {
+          // Try switching first
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: GENLAYER_CHAIN_HEX }],
+          });
+        } catch (switchError) {
+          // Chain not added yet — add it automatically
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [{
+                  chainId:            GENLAYER_CHAIN_HEX,
+                  chainName:          GENLAYER_NETWORK_NAME,
+                  nativeCurrency:     { name: 'GEN', symbol: GENLAYER_SYMBOL, decimals: 18 },
+                  rpcUrls:            [GENLAYER_RPC],
+                  blockExplorerUrls:  [GENLAYER_EXPLORER],
+                }],
+              });
+            } catch (addError) {
+              throw new Error('Could not add GenLayer network to MetaMask. Please add it manually.');
+            }
+          } else {
+            throw new Error('Please switch to GenLayer Studio network in MetaMask.');
+          }
+        }
+
+        // Re-check after switch/add
+        const updated = await provider.getNetwork();
+        if (updated.chainId !== GENLAYER_CHAIN_ID) {
+          throw new Error('Network switch failed. Please manually switch to GenLayer Studio (Chain ID 61999).');
+        }
+      }
+    }
+
+    // ── UI HELPERS ────────────────────────────────────────────────────────────
     function selectCategory(cat) {
       selectedCategory = cat;
       document.querySelectorAll('.cat-option').forEach(el => {
-        el.classList.remove('selected', 'Technology', 'Science', 'Health');
+        el.classList.remove('selected', 'Technology', 'Science');
       });
       document.getElementById('cat-' + cat).classList.add('selected', cat);
     }
 
-    function updateCharCount(inputId, countId, max) {
-      document.getElementById(countId).textContent = document.getElementById(inputId).value.length;
+    function updateCharCount(inputId, countId) {
+      document.getElementById(countId).textContent =
+        document.getElementById(inputId).value.length;
     }
 
     function showStatus(type, title, text) {
-      const box = document.getElementById('statusBox');
+      const box  = document.getElementById('statusBox');
       box.className = 'status-box show ' + type;
       document.getElementById('statusTitle').textContent = title;
-      document.getElementById('statusText').textContent = text;
+      document.getElementById('statusText').textContent  = text;
       const icons = { pending: '⟳', success: '✓', error: '✗' };
-      document.getElementById('statusIcon').textContent = icons[type];
+      document.getElementById('statusIcon').textContent  = icons[type] || '⟳';
     }
 
+    function resetForm() {
+      document.getElementById('titleInput').value   = '';
+      document.getElementById('contentInput').value = '';
+      document.getElementById('titleCount').textContent   = '0';
+      document.getElementById('contentCount').textContent = '0';
+      selectedCategory = '';
+      document.querySelectorAll('.cat-option').forEach(el => {
+        el.classList.remove('selected', 'Technology', 'Science');
+      });
+    }
+
+    // ── SUBMIT FACT ───────────────────────────────────────────────────────────
     async function submitFact() {
+      // — Validation —
       if (!walletAddress) {
         showStatus('error', 'Wallet Not Connected', 'Please connect your MetaMask wallet first.');
-        document.getElementById('statusBox').classList.add('show');
         return;
       }
       if (!selectedCategory) {
-        showStatus('error', 'Category Required', 'Please select Technology, Science, or Health.');
-        document.getElementById('statusBox').classList.add('show');
+        showStatus('error', 'Category Required', 'Please select Technology or Science.');
         return;
       }
-      const title = document.getElementById('titleInput').value.trim();
+      const title   = document.getElementById('titleInput').value.trim();
       const content = document.getElementById('contentInput').value.trim();
       if (!title) {
-        showStatus('error', 'Title Required', 'Please enter a title.');
-        document.getElementById('statusBox').classList.add('show');
+        showStatus('error', 'Title Required', 'Please enter a title for your fact.');
         return;
       }
       if (content.length < 50) {
-        showStatus('error', 'Content Too Short', 'Please write at least 2 full sentences.');
-        document.getElementById('statusBox').classList.add('show');
+        showStatus('error', 'Content Too Short', 'Please write at least 2 full sentences (min 50 characters).');
         return;
       }
 
       const btn = document.getElementById('submitBtn');
-      btn.disabled = true;
+      btn.disabled  = true;
       btn.innerHTML = '<span class="spinner"></span>Submitting...';
-      showStatus('pending', 'Waiting for MetaMask...', 'Please sign the transaction in MetaMask.');
-      document.getElementById('statusBox').classList.add('show');
 
       try {
-      const provider = new ethers.BrowserProvider(window.ethereum);  
-        // Make sure we're on GenLayer Bradbury (Chain ID 4221)
-const network = await provider.getNetwork();
-if (network.chainId !== 4221n) {
-  try {
-    await window.ethereum.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: '0x107D' }],
-    });
-  } catch(switchError) {
-    showStatus('error', 'Wrong Network', 'Please switch to GenLayer Bradbury network in MetaMask.');
-    document.getElementById('statusBox').classList.add('show');
-    btn.disabled = false;
-    btn.innerHTML = 'Submit for Verification →';
-    return;
-  }
-}
-        const signer = await provider.getSigner();
+        // — Step 1: Ensure correct network —
+        showStatus('pending', 'Checking Network...', 'Verifying you are on GenLayer Studio Testnet (Chain ID 61999).');
+        await ensureGenLayerNetwork();
 
+        // — Step 2: Get signer —
+        showStatus('pending', 'Waiting for MetaMask...', 'Please approve the transaction in MetaMask.');
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer   = await provider.getSigner();
+
+        // — Step 3: Encode the contract call —
         const iface = new ethers.Interface([
           'function submit_fact(string category, string title, string content)'
         ]);
         const data = iface.encodeFunctionData('submit_fact', [selectedCategory, title, content]);
 
+        // — Step 4: Estimate gas then send —
+        let gasLimit;
+        try {
+          const estimated = await provider.estimateGas({
+            to:   CONTRACT_ADDRESS,
+            from: walletAddress,
+            data: data,
+          });
+          // Add 30 % buffer on top of estimate
+          gasLimit = (estimated * 130n) / 100n;
+        } catch {
+          // Fallback if estimation fails
+          gasLimit = 500000n;
+        }
+
         const tx = await signer.sendTransaction({
-          to: CONTRACT_ADDRESS,
-          data: data,
-          gasLimit: 1000000
+          to:       CONTRACT_ADDRESS,
+          data:     data,
+          gasLimit: gasLimit,
         });
 
-        showStatus('success', 'Transaction Submitted! ✓',
-          'Your fact has been sent to GenLayer Bradbury. AI validators will review it. Finalization takes ~30 minutes.');
-
+        // — Step 5: Show pending with explorer link immediately —
         const txLink = document.getElementById('txLink');
-        txLink.href = 'https://explorer-bradbury.genlayer.com/tx/' + tx.hash;
-        txLink.textContent = 'View on Explorer: ' + tx.hash.slice(0,20) + '...';
+        txLink.href        = `${GENLAYER_EXPLORER}/tx/${tx.hash}`;
+        txLink.textContent = 'View Transaction: ' + tx.hash.slice(0, 20) + '...';
         txLink.style.display = 'block';
+        showStatus('pending', 'Transaction Sent ⟳',
+          'Waiting for GenLayer AI validators to confirm your fact. This can take ~30 minutes.');
 
-        document.getElementById('titleInput').value = '';
-        document.getElementById('contentInput').value = '';
-        document.getElementById('titleCount').textContent = '0';
-        document.getElementById('contentCount').textContent = '0';
-        selectedCategory = '';
-        document.querySelectorAll('.cat-option').forEach(el => {
-          el.classList.remove('selected', 'Technology', 'Science', 'Health');
-        });
+        // — Step 6: Wait for receipt —
+        const receipt = await tx.wait();
 
-      } catch(e) {
-        console.error(e);
-        showStatus('error', 'Transaction Failed', e.message || 'Something went wrong. Please try again.');
+        if (receipt && receipt.status === 1) {
+          showStatus('success', 'Fact Submitted Successfully ✓',
+            'Your fact has been accepted and sent to GenLayer AI validators. It will appear on the ledger once consensus is reached.');
+          txLink.href        = `${GENLAYER_EXPLORER}/tx/${tx.hash}`;
+          txLink.textContent = 'View on Explorer: ' + tx.hash.slice(0, 20) + '...';
+          txLink.style.display = 'block';
+          resetForm();
+        } else {
+          showStatus('error', 'Transaction Reverted',
+            'The transaction was sent but reverted on-chain. Your fact may not meet the validation rules.');
+        }
+
+      } catch (e) {
+        console.error('Transaction error:', e);
+
+        // — User-friendly error messages —
+        let errMsg = 'Something went wrong. Please try again.';
+        if (e.code === 4001 || (e.message && e.message.includes('rejected'))) {
+          errMsg = 'Transaction rejected in MetaMask. No funds were spent.';
+        } else if (e.message && e.message.includes('network')) {
+          errMsg = 'Network error. Please check your MetaMask is on GenLayer Studio (Chain ID 61999).';
+        } else if (e.message && e.message.includes('insufficient funds')) {
+          errMsg = 'Insufficient GEN balance. Get testnet tokens from the GenLayer faucet.';
+        } else if (e.message) {
+          errMsg = e.message.length > 120 ? e.message.slice(0, 120) + '...' : e.message;
+        }
+
+        showStatus('error', 'Transaction Failed', errMsg);
       }
 
-      btn.disabled = false;
+      btn.disabled  = false;
       btn.innerHTML = 'Submit for Verification →';
     }
   </script>
