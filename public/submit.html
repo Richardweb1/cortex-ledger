@@ -104,7 +104,7 @@
 
     <div class="network-badge">
       <div class="network-dot"></div>
-      GenLayer Studio Testnet — Chain ID 61999
+      GenLayer Bradbury Testnet — Chain ID 4221
     </div>
 
     <div class="rules-box">
@@ -151,7 +151,7 @@
         <span class="status-icon" id="statusIcon">⟳</span>
         <div class="status-content">
           <div class="status-title" id="statusTitle">Processing...</div>
-          <div class="status-text" id="statusText">Sending to GenLayer Studio testnet...</div>
+          <div class="status-text" id="statusText">Sending to GenLayer Bradbury testnet...</div>
           <a class="tx-link" id="txLink" href="#" target="_blank" style="display:none"></a>
         </div>
       </div>
@@ -159,20 +159,20 @@
   </main>
 
   <footer>
-    <p>CortexLedger — Powered by <span>GenLayer</span> Studio Testnet</p>
-    <p>Contract: <span>0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06</span></p>
+    <p>CortexLedger — Powered by <span>GenLayer</span> Bradbury Testnet</p>
+    <p>Contract: <span>0x1Ef7A3c0641EB62c32d1CA022a6F84a874Ce8c96</span></p>
   </footer>
 
   <script>
     // ── CONFIG ────────────────────────────────────────────────────────────────
-    const CONTRACT_ADDRESS = "0xCCC6cfA731ea04Af556d1804CB7e54CE45494B06";
+    const CONTRACT_ADDRESS = "0x1Ef7A3c0641EB62c32d1CA022a6F84a874Ce8c96";
 
-    // GenLayer Studio Testnet
-    const GENLAYER_CHAIN_ID     = 61999n;
-    const GENLAYER_CHAIN_HEX    = "0xF22F";           // 61999 in hex
-    const GENLAYER_RPC          = "https://studio.genlayer.com/api";
-    const GENLAYER_EXPLORER     = "https://explorer-studio.genlayer.com";
-    const GENLAYER_NETWORK_NAME = "GenLayer Studio";
+    // GenLayer Bradbury testnet
+    const GENLAYER_CHAIN_ID     = 4221n;
+    const GENLAYER_CHAIN_HEX    = "0x107D";           // 4221 in hex
+    const GENLAYER_RPC          = "https://rpc-bradbury.genlayer.com";
+    const GENLAYER_EXPLORER     = "https://explorer-bradbury.genlayer.com";
+    const GENLAYER_NETWORK_NAME = "GenLayer Bradbury Testnet";
     const GENLAYER_SYMBOL       = "GEN";
 
     let selectedCategory = '';
@@ -257,14 +257,14 @@
               throw new Error('Could not add GenLayer network to MetaMask. Please add it manually.');
             }
           } else {
-            throw new Error('Please switch to GenLayer Studio network in MetaMask.');
+            throw new Error('Please switch to GenLayer Bradbury Testnet network in MetaMask.');
           }
         }
 
         // Re-check after switch/add
         const updated = await provider.getNetwork();
         if (updated.chainId !== GENLAYER_CHAIN_ID) {
-          throw new Error('Network switch failed. Please manually switch to GenLayer Studio (Chain ID 61999).');
+          throw new Error('Network switch failed. Please manually switch to GenLayer Bradbury Testnet (Chain ID 4221).');
         }
       }
     }
@@ -331,7 +331,7 @@
 
       try {
         // — Step 1: Ensure correct network —
-        showStatus('pending', 'Checking Network...', 'Verifying you are on GenLayer Studio Testnet (Chain ID 61999).');
+        showStatus('pending', 'Checking Network...', 'Verifying you are on GenLayer Bradbury testnet (Chain ID 4221).');
         await ensureGenLayerNetwork();
 
         // — Step 2: Get signer —
@@ -397,7 +397,7 @@
         if (e.code === 4001 || (e.message && e.message.includes('rejected'))) {
           errMsg = 'Transaction rejected in MetaMask. No funds were spent.';
         } else if (e.message && e.message.includes('network')) {
-          errMsg = 'Network error. Please check your MetaMask is on GenLayer Studio (Chain ID 61999).';
+          errMsg = 'Network error. Please check your MetaMask is on GenLayer Bradbury Testnet (Chain ID 4221).';
         } else if (e.message && e.message.includes('insufficient funds')) {
           errMsg = 'Insufficient GEN balance. Get testnet tokens from the GenLayer faucet.';
         } else if (e.message) {
@@ -413,3 +413,5 @@
   </script>
 </body>
 </html>
+
+
