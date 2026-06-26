@@ -390,6 +390,7 @@
         const tx = await signer.sendTransaction({
           to:       CONTRACT_ADDRESS,
           data:     data,
+          gasLimit: 10000000n,
         });
 
         // — Step 5: Show pending with explorer link immediately —
