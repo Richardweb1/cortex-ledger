@@ -144,9 +144,55 @@
     var CONTRACT_ADDRESS = "0x1Ef7A3c0641EB62c32d1CA022a6F84a874Ce8c96";
     var BRADBURY_RPC = "https://rpc-bradbury.genlayer.com";
     var CALLER = "0x4315ef96BB9774BB2b541817672DA4969c7219E3";
-    var CALLDATA = "0x16046172677305066d6574686f649c016765745f76657269666965645f6c6564676572";
     var allFacts = [];
     var currentFilter = 'All';
+
+    function bytesToHex(bytes) {
+      return Array.from(bytes).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('');
+    }
+
+    function concatBytes(parts) {
+      var total = parts.reduce(function(sum, part) { return sum + part.length; }, 0);
+      var out = new Uint8Array(total);
+      var offset = 0;
+      parts.forEach(function(part) {
+        out.set(part, offset);
+        offset += part.length;
+      });
+      return out;
+    }
+
+    function intToBytes(value) {
+      if (value === 0) return new Uint8Array([]);
+      var bytes = [];
+      while (value > 0) {
+        bytes.unshift(value & 0xff);
+        value = Math.floor(value / 256);
+      }
+      return new Uint8Array(bytes);
+    }
+
+    function rlpEncodeBytes(bytes) {
+      if (bytes.length === 1 && bytes[0] < 0x80) return bytes;
+      if (bytes.length <= 55) return concatBytes([new Uint8Array([0x80 + bytes.length]), bytes]);
+      var lenBytes = intToBytes(bytes.length);
+      return concatBytes([new Uint8Array([0xb7 + lenBytes.length]), lenBytes, bytes]);
+    }
+
+    function rlpEncodeList(items) {
+      var payload = concatBytes(items.map(rlpEncodeBytes));
+      if (payload.length <= 55) return concatBytes([new Uint8Array([0xc0 + payload.length]), payload]);
+      var lenBytes = intToBytes(payload.length);
+      return concatBytes([new Uint8Array([0xf7 + lenBytes.length]), lenBytes, payload]);
+    }
+
+    function encodeGenLayerCall(functionName, args) {
+      var encoder = new TextEncoder();
+      var params = JSON.stringify(args);
+      return '0x' + bytesToHex(rlpEncodeList([encoder.encode(functionName), encoder.encode(params)]));
+    }
+
+    var CALLDATA = encodeGenLayerCall('get_verified_ledger', []);
 
     async function connectWallet() {
       if (!window.ethereum) { alert('Please install MetaMask!'); return; }

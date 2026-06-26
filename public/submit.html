@@ -303,6 +303,51 @@
       });
     }
 
+    function bytesToHex(bytes) {
+      return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function concatBytes(parts) {
+      const total = parts.reduce((sum, part) => sum + part.length, 0);
+      const out = new Uint8Array(total);
+      let offset = 0;
+      for (const part of parts) {
+        out.set(part, offset);
+        offset += part.length;
+      }
+      return out;
+    }
+
+    function intToBytes(value) {
+      if (value === 0) return new Uint8Array([]);
+      const bytes = [];
+      while (value > 0) {
+        bytes.unshift(value & 0xff);
+        value = Math.floor(value / 256);
+      }
+      return new Uint8Array(bytes);
+    }
+
+    function rlpEncodeBytes(bytes) {
+      if (bytes.length === 1 && bytes[0] < 0x80) return bytes;
+      if (bytes.length <= 55) return concatBytes([new Uint8Array([0x80 + bytes.length]), bytes]);
+      const lenBytes = intToBytes(bytes.length);
+      return concatBytes([new Uint8Array([0xb7 + lenBytes.length]), lenBytes, bytes]);
+    }
+
+    function rlpEncodeList(items) {
+      const payload = concatBytes(items.map(rlpEncodeBytes));
+      if (payload.length <= 55) return concatBytes([new Uint8Array([0xc0 + payload.length]), payload]);
+      const lenBytes = intToBytes(payload.length);
+      return concatBytes([new Uint8Array([0xf7 + lenBytes.length]), lenBytes, payload]);
+    }
+
+    function encodeGenLayerCall(functionName, args) {
+      const encoder = new TextEncoder();
+      const params = JSON.stringify(args);
+      return '0x' + bytesToHex(rlpEncodeList([encoder.encode(functionName), encoder.encode(params)]));
+    }
+
     // ── SUBMIT FACT ───────────────────────────────────────────────────────────
     async function submitFact() {
       // — Validation —
@@ -339,31 +384,12 @@
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer   = await provider.getSigner();
 
-        // — Step 3: Encode the contract call —
-        const iface = new ethers.Interface([
-          'function submit_fact(string category, string title, string content)'
-        ]);
-        const data = iface.encodeFunctionData('submit_fact', [selectedCategory, title, content]);
-
-        // — Step 4: Estimate gas then send —
-        let gasLimit;
-        try {
-          const estimated = await provider.estimateGas({
-            to:   CONTRACT_ADDRESS,
-            from: walletAddress,
-            data: data,
-          });
-          // Add 30 % buffer on top of estimate
-          gasLimit = (estimated * 130n) / 100n;
-        } catch {
-          // Fallback if estimation fails
-          gasLimit = 500000n;
-        }
+        // — Step 3: Encode the GenLayer contract call —
+        const data = encodeGenLayerCall('submit_fact', [selectedCategory, title, content]);
 
         const tx = await signer.sendTransaction({
           to:       CONTRACT_ADDRESS,
           data:     data,
-          
         });
 
         // — Step 5: Show pending with explorer link immediately —
