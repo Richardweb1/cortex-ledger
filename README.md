@@ -64,7 +64,8 @@ Science fact, then add the transaction here:
 
 - Contract: `0x0Ebca2F3d1087fA473cd3e16768C0B7f61913321`
 - Deployment transaction: `0x2ab3f1fcf4eedd8a1240c4cc2aac7fae5ea9f8e1547a7fc2e3e2d91eda7c3644`
-- Successful verification transaction: pending first finalized `submit_fact` call
+- Successful verification transaction: `0xc65cbbcca168cdde31a9776a06bb26167815c31a6b0158b5744b300af4cda79a`
+- Verification explorer: `https://explorer-bradbury.genlayer.com/tx/0xc65cbbcca168cdde31a9776a06bb26167815c31a6b0158b5744b300af4cda79a`
 
 ## Project structure
 
