@@ -7,8 +7,8 @@ approved facts on chain.
 
 - Live app: https://cortex-ledger.vercel.app
 - Network: GenLayer Bradbury Testnet
-- Contract: 0x1Ef7A3c0641EB62c32d1CA022a6F84a874Ce8c96
-- Explorer transaction: https://explorer-bradbury.genlayer.com/tx/0xa1aebb54f838f2bd83670fd9c5a0f85ec2bd252845099738687ac884b7dfb456
+- Contract: 0x0Ebca2F3d1087fA473cd3e16768C0B7f61913321
+- Deployment transaction: https://explorer-bradbury.genlayer.com/tx/0x2ab3f1fcf4eedd8a1240c4cc2aac7fae5ea9f8e1547a7fc2e3e2d91eda7c3644
 
 ## What changed after review
 
@@ -62,9 +62,9 @@ Main public methods:
 After deploying the updated contract on Bradbury, submit a clear Technology or
 Science fact, then add the transaction here:
 
-- Contract: `0x1Ef7A3c0641EB62c32d1CA022a6F84a874Ce8c96`
-- Successful verification transaction: `0xa1aebb54f838f2bd83670fd9c5a0f85ec2bd252845099738687ac884b7dfb456`
-- Explorer: `https://explorer-bradbury.genlayer.com/tx/0xa1aebb54f838f2bd83670fd9c5a0f85ec2bd252845099738687ac884b7dfb456`
+- Contract: `0x0Ebca2F3d1087fA473cd3e16768C0B7f61913321`
+- Deployment transaction: `0x2ab3f1fcf4eedd8a1240c4cc2aac7fae5ea9f8e1547a7fc2e3e2d91eda7c3644`
+- Successful verification transaction: pending first finalized `submit_fact` call
 
 ## Project structure
 
@@ -94,5 +94,6 @@ Before publishing the frontend, replace the placeholder contract address in:
 - `public/submit.html`
 
 with the newly deployed Bradbury contract address.
+
 
 

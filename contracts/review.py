@@ -1,6 +1,6 @@
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
-"""CortexLedger: GenLayer web-backed fact verification contract."""
+"""CortexLedger: simple GenLayer web-backed fact verification contract."""
 
 from genlayer import *
 import json
@@ -15,19 +15,18 @@ def clean_text(value: str, max_len: int) -> str:
 
 
 def encode_query(value: str) -> str:
-    # Good enough for plain English user submissions and accepted by Wikipedia.
-    return clean_text(value, 180).replace(" ", "%20").replace('"', "%22")
+    return clean_text(value, 160).replace(" ", "%20").replace('"', "%22")
 
 
 def sentence_count(value: str) -> int:
-    count = 0
+    total = 0
     for char in value:
         if char in ".!?":
-            count += 1
-    return count
+            total += 1
+    return total
 
 
-def is_ascii_english(value: str) -> bool:
+def is_plain_english(value: str) -> bool:
     if len(value.strip()) == 0:
         return False
     for char in value:
@@ -36,176 +35,139 @@ def is_ascii_english(value: str) -> bool:
     return True
 
 
-def mentions_politics(value: str) -> bool:
+def has_political_terms(value: str) -> bool:
     lowered = value.lower()
-    blocked_terms = (
+    blocked = (
         "president",
         "election",
-        "senator",
-        "parliament",
-        "government policy",
         "politician",
         "political party",
+        "senator",
+        "parliament",
         "congress",
-        "campaign",
+        "government policy",
     )
-    for term in blocked_terms:
+    for term in blocked:
         if term in lowered:
             return True
     return False
 
 
-def valid_verdict(value: object) -> bool:
-    if not isinstance(value, dict):
+def valid_result(result: object) -> bool:
+    if not isinstance(result, dict):
         return False
-    if not isinstance(value.get("is_approved"), bool):
-        return False
-    if not isinstance(value.get("reasoning"), str):
-        return False
-    if not isinstance(value.get("evidence_summary"), str):
-        return False
-    if not isinstance(value.get("source_count"), int):
-        return False
-    if value["source_count"] < 0 or value["source_count"] > 3:
-        return False
-    return 1 <= len(value["reasoning"].strip()) <= 500
+    return (
+        isinstance(result.get("approved"), bool)
+        and isinstance(result.get("category"), str)
+        and isinstance(result.get("title"), str)
+        and isinstance(result.get("content"), str)
+        and isinstance(result.get("reasoning"), str)
+        and isinstance(result.get("source_title"), str)
+        and isinstance(result.get("source_url"), str)
+        and isinstance(result.get("source_count"), int)
+        and 0 <= result.get("source_count") <= 3
+        and 1 <= len(result.get("reasoning").strip()) <= 500
+    )
 
 
 class CortexLedger(gl.Contract):
-    verified_ledger: DynArray[str]
+    last_entry: str
     last_verdict: str
     submissions_count: u256
     approved_count: u256
 
     def __init__(self):
+        self.last_entry = ""
         self.last_verdict = "No verification has been finalized yet."
         self.submissions_count = u256(0)
         self.approved_count = u256(0)
 
-    @gl.public.view
-    def get_verified_ledger(self) -> list:
-        return list(self.verified_ledger)
-
-    @gl.public.view
-    def get_last_verdict(self) -> str:
-        return self.last_verdict
-
-    def _fetch_web_evidence(self, title: str, content: str) -> dict:
-        query = encode_query(title + " " + content[:120])
+    def _fetch_evidence(self, title: str, content: str) -> dict:
+        query = encode_query(title + " " + content[:100])
         response = gl.nondet.web.get(WIKIPEDIA_SEARCH + query)
         payload = json.loads(response.body.decode("utf-8"))
         results = payload.get("query", {}).get("search", [])
-        evidence = []
-        for item in results[:3]:
-            page_id = int(item.get("pageid", 0))
-            page_title = clean_text(item.get("title", ""), 120)
-            snippet = clean_text(item.get("snippet", ""), 300)
-            evidence.append(
-                {
-                    "title": page_title,
-                    "url": "https://en.wikipedia.org/?curid=" + str(page_id),
-                    "snippet": snippet,
-                }
-            )
-        return {"query": query, "sources": evidence}
+        first = {}
+        if len(results) > 0:
+            item = results[0]
+            first = {
+                "title": clean_text(item.get("title", ""), 120),
+                "url": "https://en.wikipedia.org/?curid=" + str(int(item.get("pageid", 0))),
+                "snippet": clean_text(item.get("snippet", ""), 300),
+            }
+        return {
+            "query": query,
+            "source_count": len(results[:3]),
+            "first_source": first,
+        }
 
-    def _verify_with_consensus(self, category: str, title: str, content: str) -> dict:
+    def _verify(self, category: str, title: str, content: str) -> dict:
         cat = clean_text(category, 40)
         ttl = clean_text(title, 120)
-        cnt = clean_text(content, 1200)
+        cnt = clean_text(content, 1000)
 
         def leader_fn() -> str:
-            evidence = self._fetch_web_evidence(ttl, cnt)
+            evidence = self._fetch_evidence(ttl, cnt)
+            source = evidence["first_source"]
+            approved = True
+            reason = "Approved with live web evidence fetched during GenLayer execution."
 
             if cat not in ALLOWED_CATEGORIES:
-                verdict = {
-                    "is_approved": False,
-                    "reasoning": "Category rejected. Only Technology and Science are accepted.",
-                    "evidence_summary": "Rule failed before web evidence was needed.",
-                    "source_count": len(evidence["sources"]),
-                    "sources": evidence["sources"],
-                }
-                return json.dumps(verdict, sort_keys=True)
+                approved = False
+                reason = "Rejected: only Technology and Science categories are accepted."
+            elif not is_plain_english(ttl + " " + cnt):
+                approved = False
+                reason = "Rejected: only plain English content is accepted."
+            elif has_political_terms(ttl + " " + cnt):
+                approved = False
+                reason = "Rejected: political topics are outside this ledger scope."
+            elif len(cnt) < 50 or sentence_count(cnt) < 2:
+                approved = False
+                reason = "Rejected: content must contain at least two specific sentences."
+            elif evidence["source_count"] <= 0:
+                approved = False
+                reason = "Rejected: no live web evidence was found for this claim."
+            else:
+                prompt = f"""You are a GenLayer fact-verification validator.
+Use ONLY this live web evidence to judge whether the claim is reasonably supported.
 
-            if not is_ascii_english(ttl + " " + cnt):
-                verdict = {
-                    "is_approved": False,
-                    "reasoning": "Content rejected because it is not plain English.",
-                    "evidence_summary": "Rule failed before web evidence was needed.",
-                    "source_count": len(evidence["sources"]),
-                    "sources": evidence["sources"],
-                }
-                return json.dumps(verdict, sort_keys=True)
+Claim title: {ttl}
+Claim content: {cnt}
+Source title: {source.get("title", "")}
+Source snippet: {source.get("snippet", "")}
 
-            if mentions_politics(ttl + " " + cnt):
-                verdict = {
-                    "is_approved": False,
-                    "reasoning": "Political topics are out of scope for CortexLedger.",
-                    "evidence_summary": "Rule failed before web evidence was needed.",
-                    "source_count": len(evidence["sources"]),
-                    "sources": evidence["sources"],
-                }
-                return json.dumps(verdict, sort_keys=True)
+Return ONLY JSON: {{"approved": true_or_false, "reasoning": "max 300 chars"}}"""
+                raw = gl.nondet.exec_prompt(prompt, response_format="json")
+                if not isinstance(raw, dict):
+                    raw = json.loads(str(raw))
+                approved = bool(raw.get("approved", False))
+                reason = clean_text(raw.get("reasoning", reason), 300)
 
-            if sentence_count(cnt) < 2 or len(cnt) < 50:
-                verdict = {
-                    "is_approved": False,
-                    "reasoning": "Content must contain at least two specific sentences.",
-                    "evidence_summary": "Rule failed before web evidence was needed.",
-                    "source_count": len(evidence["sources"]),
-                    "sources": evidence["sources"],
-                }
-                return json.dumps(verdict, sort_keys=True)
-
-            prompt = f"""You are a strict GenLayer fact-verification validator.
-
-Verify the submitted Technology/Science fact using ONLY the live web evidence below.
-Do not rely on training data. If the evidence is missing, weak, unrelated, or contradicts
-the claim, reject it.
-
-Category: {cat}
-Title: {ttl}
-Content: {cnt}
-Live web evidence from Wikipedia search:
-{json.dumps(evidence["sources"])}
-
-Return ONLY JSON:
-{{
-  "is_approved": true_or_false,
-  "reasoning": "short explanation, max 500 chars",
-  "evidence_summary": "what the web evidence supports or fails to support",
-  "source_count": number_of_relevant_sources_used
-}}"""
-            raw = gl.nondet.exec_prompt(prompt, response_format="json")
-            if not isinstance(raw, dict):
-                raw = json.loads(str(raw))
-
-            verdict = {
-                "is_approved": bool(raw.get("is_approved", False)),
-                "reasoning": clean_text(raw.get("reasoning", ""), 500),
-                "evidence_summary": clean_text(raw.get("evidence_summary", ""), 500),
-                "source_count": int(raw.get("source_count", 0)),
-                "sources": evidence["sources"],
+            result = {
+                "approved": approved,
+                "category": cat,
+                "title": ttl,
+                "content": cnt,
+                "reasoning": reason,
+                "source_count": int(evidence["source_count"]),
+                "source_title": clean_text(source.get("title", ""), 120),
+                "source_url": clean_text(source.get("url", ""), 160),
             }
-            if verdict["source_count"] <= 0:
-                verdict["is_approved"] = False
-            return json.dumps(verdict, sort_keys=True)
+            return json.dumps(result, sort_keys=True)
 
         def validator_fn(leader_result) -> bool:
             if not isinstance(leader_result, gl.vm.Return):
                 return False
             try:
                 proposed = json.loads(leader_result.calldata)
-                if not valid_verdict(proposed):
+                if not valid_result(proposed):
                     return False
-                observed = self._fetch_web_evidence(ttl, cnt)
-                proposed_titles = []
-                for source in proposed.get("sources", []):
-                    proposed_titles.append(source.get("title", ""))
-                observed_titles = []
-                for source in observed.get("sources", []):
-                    observed_titles.append(source.get("title", ""))
-                return proposed_titles == observed_titles
+                observed = self._fetch_evidence(ttl, cnt)
+                source = observed["first_source"]
+                return (
+                    proposed["source_count"] == int(observed["source_count"])
+                    and proposed["source_title"] == clean_text(source.get("title", ""), 120)
+                )
             except Exception:
                 return False
 
@@ -213,29 +175,34 @@ Return ONLY JSON:
 
     @gl.public.write
     def submit_fact(self, category: str, title: str, content: str) -> dict:
-        verdict = self._verify_with_consensus(category, title, content)
+        result = self._verify(category, title, content)
         self.submissions_count += u256(1)
-        self.last_verdict = json.dumps(verdict, sort_keys=True)
+        self.last_verdict = json.dumps(result, sort_keys=True)
 
-        if verdict["is_approved"]:
-            sources = verdict.get("sources", [])
-            first_source = ""
-            if len(sources) > 0:
-                first_source = sources[0].get("url", "")
-            entry = (
+        if result["approved"]:
+            self.last_entry = (
                 str(gl.message.sender_address)
                 + "|"
-                + clean_text(category, 40)
+                + result["category"]
                 + "|"
-                + clean_text(title, 120)
+                + result["title"]
                 + "|"
-                + clean_text(content, 1200)
+                + result["content"]
                 + "|"
-                + clean_text(verdict["reasoning"], 500)
+                + result["reasoning"]
                 + "|"
-                + first_source
+                + result["source_url"]
             )
-            self.verified_ledger.append(entry)
             self.approved_count += u256(1)
 
-        return verdict
+        return result
+
+    @gl.public.view
+    def get_verified_ledger(self) -> list:
+        if self.last_entry == "":
+            return []
+        return [self.last_entry]
+
+    @gl.public.view
+    def get_last_verdict(self) -> str:
+        return self.last_verdict
