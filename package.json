@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "ethers": "^6.0.0",
-    "genlayer-js": "^0.1.0",
+    "genlayer-js": "^1.1.8",
     "vite": "^5.0.0"
   }
 }

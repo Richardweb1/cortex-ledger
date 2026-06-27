@@ -6,6 +6,7 @@
   <title>Submit a Fact — CortexLedger</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+  <script type="module" src="./genlayer-client.js"></script>
   <style>
     :root {
       --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
@@ -379,42 +380,26 @@
         showStatus('pending', 'Checking Network...', 'Verifying you are on GenLayer Bradbury testnet (Chain ID 4221).');
         await ensureGenLayerNetwork();
 
-        // — Step 2: Get signer —
+        // — Step 2: Send through the official GenLayer client —
         showStatus('pending', 'Waiting for MetaMask...', 'Please approve the transaction in MetaMask.');
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer   = await provider.getSigner();
+        if (!window.cortexGenLayer) {
+          throw new Error('GenLayer client is still loading. Please wait a moment and try again.');
+        }
+        const txHash = await window.cortexGenLayer.write(
+          CONTRACT_ADDRESS,
+          walletAddress,
+          'submit_fact',
+          [selectedCategory, title, content]
+        );
 
-        // — Step 3: Encode the GenLayer contract call —
-        const data = encodeGenLayerCall('submit_fact', [selectedCategory, title, content]);
-
-        const tx = await signer.sendTransaction({
-          to:       CONTRACT_ADDRESS,
-          data:     data,
-          gasLimit: 10000000n,
-        });
-
-        // — Step 5: Show pending with explorer link immediately —
+        // — Step 3: Show the consensus transaction immediately —
         const txLink = document.getElementById('txLink');
-        txLink.href        = `${GENLAYER_EXPLORER}/tx/${tx.hash}`;
-        txLink.textContent = 'View Transaction: ' + tx.hash.slice(0, 20) + '...';
+        txLink.href        = `${GENLAYER_EXPLORER}/tx/${txHash}`;
+        txLink.textContent = 'View Transaction: ' + txHash;
         txLink.style.display = 'block';
         showStatus('pending', 'Transaction Sent ⟳',
           'Waiting for GenLayer AI validators to confirm your fact. This can take ~30 minutes.');
-
-        // — Step 6: Wait for receipt —
-        const receipt = await tx.wait();
-
-        if (receipt && receipt.status === 1) {
-          showStatus('success', 'Fact Submitted Successfully ✓',
-            'Your fact has been accepted and sent to GenLayer AI validators. It will appear on the ledger once consensus is reached.');
-          txLink.href        = `${GENLAYER_EXPLORER}/tx/${tx.hash}`;
-          txLink.textContent = 'View on Explorer: ' + tx.hash.slice(0, 20) + '...';
-          txLink.style.display = 'block';
-          resetForm();
-        } else {
-          showStatus('error', 'Transaction Reverted',
-            'The transaction was sent but reverted on-chain. Your fact may not meet the validation rules.');
-        }
+        resetForm();
 
       } catch (e) {
         console.error('Transaction error:', e);

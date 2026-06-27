@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CortexLedger — Decentralized Fact Verification</title>
+  <script type="module" src="./genlayer-client.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
@@ -223,29 +224,13 @@
 
     async function fetchFacts() {
       try {
-        var response = await fetch(BRADBURY_RPC, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'gen_call',
-            params: [{
-              to: CONTRACT_ADDRESS,
-              from: CALLER,
-              data: CALLDATA,
-              type: 'read'
-            }],
-            id: 1
-          })
-        });
-        var data = await response.json();
-        console.log('RPC Response:', data);
-        if (data.result && data.result !== '05') {
-          var decoded = decodeCalldataResult(data.result);
-          console.log('Decoded facts:', decoded);
-          return decoded;
+        for (var attempt = 0; attempt < 20 && !window.cortexGenLayer; attempt++) {
+          await new Promise(function(resolve) { setTimeout(resolve, 100); });
         }
-        return [];
+        if (!window.cortexGenLayer) throw new Error('GenLayer client did not load.');
+        var result = await window.cortexGenLayer.read(CONTRACT_ADDRESS, 'get_verified_ledger', []);
+        if (Array.isArray(result)) return result;
+        return typeof result === 'string' ? JSON.parse(result) : [];
       } catch(e) {
         console.error('Error fetching facts:', e);
         return [];
